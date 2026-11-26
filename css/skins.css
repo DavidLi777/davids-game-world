@@ -117,7 +117,7 @@ html[data-skin="2"], html[data-skin="3"], html[data-skin="4"], html[data-skin="5
       radial-gradient(50% 110% at 0% 0%, color-mix(in srgb, var(--p1) 12%, transparent), transparent 70%), var(--confetti), #fff;
     color: var(--ink); position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
   & .hero::after { content: ''; position: absolute; inset: -30% -8% auto auto; width: 42%; aspect-ratio: 1; border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--p3) 22%, transparent), transparent 62%); pointer-events: none; animation: gyFloat 9s ease-in-out infinite; }
+    background: radial-gradient(circle, color-mix(in srgb, var(--p3) 22%, transparent), transparent 62%); pointer-events: none; }
   & .hero > * { position: relative; z-index: 1; }
   & .hero h1 { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
   & .hero p, & .herot p { color: var(--mute); opacity: 1; } & .hero p b { color: var(--p1); }

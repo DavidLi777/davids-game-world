@@ -35,3 +35,5 @@
 .aicol input{width:44px;height:34px;border:0;padding:0;background:none;cursor:pointer}
 .aied .chk{display:inline-flex;gap:6px;align-items:center;margin-right:12px;font-size:14px}
 .top .brand img.appmark{width:34px;height:34px;border-radius:9px;vertical-align:middle;margin-right:6px}
+.ailive{display:flex;gap:12px;align-items:center;margin:10px 0}
+.ailive canvas{width:64px;height:64px;border-radius:14px;flex:none;box-shadow:0 4px 14px rgb(0 0 0 / .25)}

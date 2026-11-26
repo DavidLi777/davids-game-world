@@ -4,7 +4,16 @@ const CONTACT_EMAIL = 'davidsapplicationstore@gmail.com';
 const FOUNDER = { name: 'David Li', ig: 'https://www.instagram.com/davidlcalifornia/', igName: '@davidlcalifornia', fb: 'https://www.facebook.com/profile.php?id=829503', fbName: 'David Li' };
 { const g = Config.get; Config.get = function () { const c = g.call(this); if (!c.contactEmail) c.contactEmail = CONTACT_EMAIL; return c; }; }
 
-function saveBlob(name, blob) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+// Inside the Claude viewer, pages may only save files through its "downloads" capability (the viewer confirms each one);
+// everywhere else (Base44, the public site) a normal browser download is used.
+const SAVE_OK = /\.(gif|png|jpe?g|webp|mp4|webm|mov|txt|json|md|docx|pptx|epub|csv|ttf|html|svg|pdf|xlsx|zip|fig)$/i;
+async function saveBlob(name, blob) {
+  let dl = null; try { if (window.claude && window.claude.use && !window.B44) dl = await window.claude.use('downloads'); } catch (e) {}
+  if (dl) { let fname = name, data = blob;
+    if (!SAVE_OK.test(name) && typeof AppIcon !== 'undefined') { data = AppIcon.zip([[name, new Uint8Array(await blob.arrayBuffer())]]); fname = name.replace(/\.[^.]+$/, '') + '.zip'; }
+    try { await dl.save({ filename: fname, data }); toast('Saved ' + fname + '.'); return true; }
+    catch (e) { const c = e && e.code; if (c === 'declined') { toast('Download cancelled.'); return false; } if (c === 'rate_limited') { toast('Another save is still waiting for your answer.'); return false; } if (c === 'host_unavailable') { toast('This app can’t save files. Open the site in a browser or on a computer to download.'); return false; } if (c === 'too_large') { toast('That file is too large to save here. Try a smaller size.'); return false; } } }
+  const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); return true; }
 
 // ---------- Follow the founder (About page and footer) ----------
 const IC_IG = '<svg viewBox="0 0 24 24" aria-hidden="true" class="ic"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>';

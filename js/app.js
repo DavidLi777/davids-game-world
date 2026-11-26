@@ -67,7 +67,13 @@ function renderInner(force) {
   if (!force && V.live === false) return;
   V.render(el, App.arg); App.dirty = false;
 }
-let rt = null; Store.onChange = kind => { clearTimeout(rt); rt = setTimeout(() => render(false), 120); };
+let rt = null, myProf = '';
+// Only redraw when something the current page shows has changed. Pages without a live-update method list the data they
+// depend on in .deps; other people's profile heartbeats and visit logs no longer redraw (and flash) the whole page.
+Store.onChange = kind => { const V = VIEWS[App.view];
+  if (kind === 'profiles') { let j = ''; try { j = JSON.stringify(Store.get('profiles', Store.uid) || null); } catch (e) {} if (j === myProf && V && !V.update && V.deps) return; myProf = j; kind = 'me'; }
+  if (V && !V.update && V.deps && kind !== '*' && !V.deps.includes(kind)) return;
+  clearTimeout(rt); rt = setTimeout(() => render(false), 120); };
 document.addEventListener('focusout', () => { if (App.dirty) setTimeout(() => { if (!(document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) render(false); }, 200); });
 
 document.addEventListener('click', e => { const f = e.target.closest && e.target.closest('[data-fav]'); if (f) { e.preventDefault(); e.stopPropagation(); Fav.toggle(f.dataset.fav); return; } }, true);
@@ -375,3 +381,4 @@ async function boot() {
   if (shared) { const ok = await Store.profilesLoaded; try { if (ok && !Store.get('profiles', Store.uid)) await saveMe({}); await Quota.load(); } catch (e) { console.warn(e); } render(false); }
   setInterval(() => { if (Store.mode === 'shared' && Store.canWrite && Store.get('profiles', Store.uid)) Store.patch('profiles', Store.uid, { seen: now() }); }, 5 * 60e3);
 }
+VIEWS.home.deps = ['tables', 'config', 'members', 'accounts', 'me'];
