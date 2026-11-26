@@ -216,7 +216,7 @@ html[data-skin="5"] {
   & .band > h1, & .band > .libhead h1, & section > h1:first-child, & .hero h1 { background: none; color: #fff; -webkit-text-fill-color: #fff; text-shadow: 0 4px 24px rgb(60 0 80 / .35); }
   & .hero p, & .herot p { color: #fbe8f6; } & .hero p b { color: #fcaf45; }
   & .tile .art, & .tile.big .art { box-shadow: inset 0 -6px 0 rgb(0 0 0 / .14), 0 8px 20px -10px rgb(30 0 50 / .6); }
-  & .ghead, & .start { background: var(--confetti), transparent; }
+  & .ghead { background: var(--confetti), transparent; } & .start { background: var(--confetti), var(--page-bg, linear-gradient(150deg, #5b2a9e, #833ab4 28%, #c13584 62%, #e1306c 85%, #f56040)); }
   & .board { background: radial-gradient(120% 90% at 50% 0%, #6a2a9a 0%, #3d0f63 60%, #250840 100%); }
   & .mbox { background: linear-gradient(160deg, #6b2aa6, #b0307f); color: #fff; }
   & .foot { background: var(--confetti), rgb(40 8 70 / .55); }

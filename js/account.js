@@ -1,14 +1,16 @@
 // Accounts, sign-in, membership plans, payments (Stripe on the web, Google Play and Apple in the store apps), donations and promo codes.
 
 // ---------- Site configuration (set by the developer, readable by everyone) ----------
-const CFG_DEFAULT = { siteUrl: '', contactEmail: '', currency: 'USD',
+const CFG_DEFAULT = { siteUrl: '', currency: 'USD',
   prices: { monthly: 7.99, yearly: 59.99 },
   stripe: { monthly: '', yearly: '', d25: '', d50: '', d100: '', dcustom: '', portal: '' },
   play: { pkg: '', monthly: '', yearly: '', d25: '', d50: '', d100: '' },
   apple: { appId: '', monthly: '', yearly: '', d25: '', d50: '', d100: '' },
   firebase: { apiKey: '', authDomain: '', projectId: '', appId: '' },
   providers: { google: true, apple: true, microsoft: true, facebook: true, twitter: true, github: true, yahoo: true },
-  freeAll: false };
+  freeAll: false, contactEmail: 'davidsapplicationstore@gmail.com',
+  // David's design, built in so every copy of the site (Claude and Base44) starts with it: option 5, purple to orange.
+  look: { skin: '5', all: 6, bright: 5, contrast: 5, dots: 2, sat: 5, warm: 7, grads: { 5: { grad: { angle: 45, stops: [['#fcaf45', 0], ['#f77737', 35], ['#e1306c', 61], ['#c13584', 72], ['#833ab4', 100]] } } } } };
 const Config = {
   get() { const d = Store.get('config', 'site') || {}; const { id, ...rest } = d; const c = deepMerge(CFG_DEFAULT, rest); if (c.prices.monthly === 4.99) c.prices.monthly = 7.99; if (c.prices.yearly === 39.99) c.prices.yearly = 59.99; delete c.prices.lifetime; return c; },
   async save(patch) { const cur = this.get(); await Store.put('config', 'site', deepMerge(cur, patch)); },

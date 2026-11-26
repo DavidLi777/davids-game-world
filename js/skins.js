@@ -7,7 +7,7 @@ const SKIN_CATS = {
   5: { Board: '#833ab4', Card: '#e1306c', Dice: '#f77737', Puzzle: '#5851db', Word: '#fcaf45', Arcade: '#fd1d1d', Party: '#c13584' },
   4: { Board: '#8b5cf6', Card: '#ec4899', Dice: '#f59e0b', Puzzle: '#06b6d4', Word: '#10b981', Arcade: '#f43f5e', Party: '#d946ef' } };
 const Skin = {
-  cur() { const v = String(LS.get('skin', '') || '2'); return SKINS.some(s => s[0] === v) ? v : '2'; },
+  cur() { let d = '5'; try { const k = typeof Config !== 'undefined' && Config.get().look && Config.get().look.skin; if (k) d = String(k); } catch (e) {} const v = String(LS.get('skin', '') || d); return SKINS.some(s => s[0] === v) ? v : '5'; },
   apply(v = this.cur()) { document.documentElement.dataset.skin = v; if (!this.base) this.base = { ...CAT_COLOR }; Object.assign(CAT_COLOR, SKIN_CATS[v] || this.base); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = v === '1' ? '#0f5a43' : v === '5' ? '#833ab4' : '#7c3aed'; },
   set(v) { LS.set('skin', v); this.apply(v); try { render(true); } catch (e) {} toast('Look changed to ' + SKINS.find(s => s[0] === v)[1] + '.'); },
   pickerHTML() { const c = this.cur(); return `<div class="skinpick" role="radiogroup" aria-label="Site look">${SKINS.map(([v, n, d, g]) => `<button type="button" role="radio" aria-checked="${v === c}" class="${v === c ? 'on' : ''}" data-skin="${v}"><div class="skw" style="background:${g}"><i></i></div><b>Option ${v} · ${n}</b><small>${d}</small></button>`).join('')}</div>`; },

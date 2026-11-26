@@ -1,6 +1,6 @@
 // Offline support for the installed app: keeps the game files so the games work without a connection.
 // Never caches sign-in, the database or payments: those always go to the network.
-const CACHE = 'gameyard-v15';
+const CACHE = 'gameyard-v16';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './qr.png', './icon-192.png', './icon-512.png', './words.txt', './common.txt',
   './js/data.js', './js/games-board.js', './js/games-solo.js', './js/games-board2.js', './js/games-cards2.js', './js/games-solo2.js', './js/games3-board.js', './js/games3-cards.js', './js/games3-solo.js',
   './js/core.js', './js/app.js', './js/compete.js', './js/v2.js', './js/platform.js', './js/social.js', './js/account.js', './js/site.js', './js/rtc.js', './js/ugc.js', './js/compete2.js', './js/gamex.js', './js/party.js', './js/i18n.js', './js/chat2.js', './js/social2.js', './js/ops.js', './js/b44sdk.js', './js/b44.js', './js/launch.js'];

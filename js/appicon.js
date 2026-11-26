@@ -14,13 +14,15 @@ const AppIcon = (() => {
     candy: { name: 'Candy', stops: ['#f472b6', '#e879f9', '#a78bfa', '#60a5fa'], glow: '#ffffff' },
     ember: { name: 'Ember', stops: ['#450a0a', '#b91c1c', '#ea580c', '#facc15'], glow: '#fff7ae' },
     mono: { name: 'Graphite', stops: ['#111827', '#1f2937', '#374151', '#4b5563'], glow: '#a78bfa' } };
+  const POS4 = [0, 45, 78, 100], preStops = k => PRESETS[k].stops.map((c, i) => [c, POS4[i]]);
   const L0 = () => ({ x: 0, y: 0, s: 100, r: 0, flip: false, on: true, op: 100 });
-  const DEF = () => ({ v: 1, bg: { mode: 'linear', stops: PRESETS.original.stops.slice(), angle: 135, glow: 55, glowColor: '#ff8a4c', glowAt: 'br', shine: 10, solid: '#7c3aed', grain: 1.2, img: null, imgFit: 'cover' },
+  const DEF = () => ({ v: 1, bg: { mode: 'linear', stops: preStops('original'), angle: 135, glow: 55, glowColor: '#ff8a4c', glowAt: 'br', shine: 10, solid: '#7c3aed', grain: 1.2, img: null, imgFit: 'cover' },
     art: { main: '#ffffff', accent: '#e83e9c', buttons: '#9d2fd6', shadow: 0, shadowColor: '#2a0a4a' },
     g: { x: 0, y: 0, s: 100, r: 0, flip: false, on: true, op: 100 }, L: { controller: L0(), king: L0(), card: L0(), custom: { ...L0(), on: false } },
     order: ['controller', 'card', 'king', 'custom'], img: null, corner: 0, apply: { favicon: true, touch: true, header: false } });
   const clone = o => JSON.parse(JSON.stringify(o));
   const fix = s => { const d = DEF(); s = s && s.v ? s : d; const m = { ...d, ...s, bg: { ...d.bg, ...(s.bg || {}) }, art: { ...d.art, ...(s.art || {}) }, g: { ...d.g, ...(s.g || {}) }, apply: { ...d.apply, ...(s.apply || {}) }, L: {} };
+    if (!Array.isArray(m.bg.stops) || m.bg.stops.length < 2) m.bg.stops = d.bg.stops; m.bg.stops = m.bg.stops.map((x, i, a) => Array.isArray(x) ? [x[0], Math.max(0, Math.min(100, +x[1] || 0))] : [x, a.length === 4 ? POS4[i] : Math.round(i / (a.length - 1) * 100)]);
     for (const k in d.L) m.L[k] = { ...d.L[k], ...((s.L || {})[k] || {}) }; if (!Array.isArray(m.order) || m.order.length !== 4) m.order = d.order; return m; };
 
   // ----- drawing -----
@@ -35,10 +37,13 @@ const AppIcon = (() => {
     return gMatrix(st, n).translate((cx + L.x / 100 * V) * k, (cy + L.y / 100 * V) * k).rotate(L.r).scale((L.flip ? -1 : 1) * L.s / 100, L.s / 100).translate(-cx * k, -cy * k); }
   function drawBg(c, st, n, transparent) { const bg = st.bg; if (transparent || bg.mode === 'none') return;
     if (bg.mode === 'solid') { c.fillStyle = bg.solid; c.fillRect(0, 0, n, n); }
-    else if (bg.mode === 'radial') { const gr = c.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n * .72); bg.stops.forEach((s, i) => gr.addColorStop([0, .45, .78, 1][i], s)); c.fillStyle = gr; c.fillRect(0, 0, n, n); }
-    else { const a = (bg.angle - 90) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), h = (Math.abs(dx) + Math.abs(dy)) * n / 2; const gr = c.createLinearGradient(n / 2 - dx * h, n / 2 - dy * h, n / 2 + dx * h, n / 2 + dy * h); bg.stops.forEach((s, i) => gr.addColorStop([0, .45, .78, 1][i], s)); c.fillStyle = gr; c.fillRect(0, 0, n, n); }
+    else if (bg.mode === 'radial') { const gr = c.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n * .72); sorted(bg.stops).forEach(([c, p]) => gr.addColorStop(p / 100, c)); c.fillStyle = gr; c.fillRect(0, 0, n, n); }
+    else { const a = (bg.angle - 90) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), h = (Math.abs(dx) + Math.abs(dy)) * n / 2; const gr = c.createLinearGradient(n / 2 - dx * h, n / 2 - dy * h, n / 2 + dx * h, n / 2 + dy * h); sorted(bg.stops).forEach(([c, p]) => gr.addColorStop(p / 100, c)); c.fillStyle = gr; c.fillRect(0, 0, n, n); }
     if (bg.glow > 0 && bg.glowAt !== 'off') { const [gx, gy] = at[bg.glowAt] || at.br, gr = c.createRadialGradient(gx * n, gy * n, 0, gx * n, gy * n, n * .78); gr.addColorStop(0, hexA(bg.glowColor, bg.glow / 100)); gr.addColorStop(1, hexA(bg.glowColor, 0)); c.fillStyle = gr; c.fillRect(0, 0, n, n); }
     if (bg.shine > 0) { const gr = c.createRadialGradient(n * .25, n * .15, 0, n * .25, n * .15, n * .6); gr.addColorStop(0, `rgba(255,255,255,${bg.shine / 100})`); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, n, n); } }
+  const sorted = st => st.slice().sort((a, b) => a[1] - b[1]);
+  const stripCSS = st => `linear-gradient(90deg, ${sorted(st).map(([c, p]) => `${c} ${p}%`).join(', ')})`;
+  const colorAt = (st, p) => { const a = sorted(st); if (p <= a[0][1]) return a[0][0]; if (p >= a[a.length - 1][1]) return a[a.length - 1][0]; for (let i = 0; i < a.length - 1; i++) { const [c1, p1] = a[i], [c2, p2] = a[i + 1]; if (p >= p1 && p <= p2) { const t = (p - p1) / Math.max(.001, p2 - p1), A = parseInt(c1.slice(1), 16), B = parseInt(c2.slice(1), 16); return '#' + [16, 8, 0].map(sh => Math.round((A >> sh & 255) + ((B >> sh & 255) - (A >> sh & 255)) * t).toString(16).padStart(2, '0')).join(''); } } return a[0][0]; };
   const hexA = (h, a) => { const m = /^#?([\da-f]{6})$/i.exec(h || '') ; const v = m ? parseInt(m[1], 16) : 0xffffff; return `rgba(${v >> 16},${v >> 8 & 255},${v & 255},${a})`; };
   // A touch of noise removes the 8-bit "steps" (posterization) a smooth gradient would otherwise show.
   function dither(c, n, amt) { if (!amt) return; const d = c.getImageData(0, 0, n, n), p = d.data; let s = 12345; for (let i = 0; i < p.length; i += 4) { if (!p[i + 3]) continue; s = (s * 1103515245 + 12345) >>> 0; const r = ((s >>> 8) / 16777216 * 2 - 1) * amt; p[i] += r; p[i + 1] += r; p[i + 2] += r; } c.putImageData(d, 0, 0); }
@@ -84,7 +89,7 @@ const AppIcon = (() => {
     const head = 6 + 16 * sizes.length, total = head + bufs.reduce((a, b) => a + b.length, 0), out = new Uint8Array(total), dv = new DataView(out.buffer); dv.setUint16(2, 1, true); dv.setUint16(4, sizes.length, true); let off = head;
     sizes.forEach((s, i) => { const e = 6 + 16 * i; out[e] = s >= 256 ? 0 : s; out[e + 1] = s >= 256 ? 0 : s; dv.setUint16(e + 4, 1, true); dv.setUint16(e + 6, 32, true); dv.setUint32(e + 8, bufs[i].length, true); dv.setUint32(e + 12, off, true); out.set(bufs[i], off); off += bufs[i].length; });
     return new Blob([out], { type: 'image/x-icon' }); }
-  function svgFile(st) { st = fix(st); const n = 1024, k = n / V, bg = st.bg, stops = bg.stops.map((s, i) => `<stop offset="${[0, .45, .78, 1][i]}" stop-color="${s}"/>`).join(''); const a = (bg.angle - 90) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), h = (Math.abs(dx) + Math.abs(dy)) / 2;
+  function svgFile(st) { st = fix(st); const n = 1024, k = n / V, bg = st.bg, stops = sorted(bg.stops).map(([c, p]) => `<stop offset="${p / 100}" stop-color="${c}"/>`).join(''); const a = (bg.angle - 90) * Math.PI / 180, dx = Math.cos(a), dy = Math.sin(a), h = (Math.abs(dx) + Math.abs(dy)) / 2;
     const [gx, gy] = at[bg.glowAt] || at.br; let defs = `<linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="${(.5 - dx * h) * n}" y1="${(.5 - dy * h) * n}" x2="${(.5 + dx * h) * n}" y2="${(.5 + dy * h) * n}">${stops}</linearGradient><radialGradient id="rbg" cx=".5" cy=".5" r=".72">${stops}</radialGradient><radialGradient id="glow" cx="${gx}" cy="${gy}" r=".78"><stop offset="0" stop-color="${bg.glowColor}" stop-opacity="${bg.glow / 100}"/><stop offset="1" stop-color="${bg.glowColor}" stop-opacity="0"/></radialGradient><radialGradient id="shine" cx=".25" cy=".15" r=".6"><stop offset="0" stop-color="#fff" stop-opacity="${bg.shine / 100}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>`;
     let body = bg.mode === 'none' ? '' : bg.mode === 'solid' ? `<rect width="${n}" height="${n}" fill="${bg.solid}"/>` : bg.mode === 'image' && bg.img ? `<image href="${bg.img}" width="${n}" height="${n}" preserveAspectRatio="xMidYMid ${bg.imgFit === 'contain' ? 'meet' : 'slice'}"/>` : `<rect width="${n}" height="${n}" fill="url(#${bg.mode === 'radial' ? 'rbg' : 'bg'})"/>`;
     if (bg.mode !== 'none' && bg.glow > 0 && bg.glowAt !== 'off') body += `<rect width="${n}" height="${n}" fill="url(#glow)"/>`; if (bg.mode !== 'none' && bg.shine > 0) body += `<rect width="${n}" height="${n}" fill="url(#shine)"/>`;
@@ -134,6 +139,12 @@ const AppIcon = (() => {
   function spread() { const ks = ['controller', 'king', 'card'].filter(k => Ed.st.L[k].on); if (ks.length < 2) return toast('Turn on at least two layers.'); const n = Ed.N; const bs = ks.map(k => ({ k, b: bbox(Ed.st, k, n) })).sort((a, b) => a.b.cx - b.b.cx);
     const tot = bs.reduce((a, x) => a + x.b.w, 0), g = bbox(Ed.st, 'g', n), gap = (g.w - tot) / (bs.length - 1); let x = g.x0; for (const { k, b } of bs) { moveBy(Ed.st, k, x - b.x0, 0, n); x += b.w + gap; } }
 
+  function stripHTML(bg) { const g = Ed.gsel = Math.min(Ed.gsel || 0, bg.stops.length - 1), s = bg.stops[g];
+    return `<div class="aigrad"><b>Colour spectrum</b><p class="small muted">Every colour point is on the bar. Drag a point to change the distance between colours (closer points blend faster, farther points give a colour more room). Click the bar to drop a new point. Pick a point to recolour or remove it.</p>
+      <div class="gstrip" id="aistrip" style="background:${stripCSS(bg.stops)}" role="group" aria-label="Background colour spectrum">${bg.stops.map(([c, p], i) => `<button type="button" class="gstop ${i === g ? 'on' : ''}" data-gi="${i}" style="left:${p}%;--sc:${c}" aria-label="Colour point ${i + 1} at ${Math.round(p)}%"></button>`).join('')}</div>
+      <div class="gscale"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+      <div class="gedit"><label class="fld inline">Colour <input type="color" id="aigc" value="${s[0]}"></label><label class="fld inline">Position <input type="number" id="aigp" min="0" max="100" step="1" value="${Math.round(s[1])}">%</label><button class="btn sm" data-gop="del" ${bg.stops.length <= 2 ? 'disabled' : ''}>Remove point</button><button class="btn sm" data-gop="add">Add point</button><button class="btn sm" data-gop="even">Space evenly</button><button class="btn sm" data-gop="rev">Reverse</button><button class="btn sm" data-gop="site">Use the site’s colours</button></div>
+      <p class="small">${sorted(bg.stops).map(([c, p]) => `<code>${c} ${Math.round(p)}%</code>`).join(' · ')}</p></div>`; }
   function html() { const st = Ed.st, bg = st.bg, art = st.art, sl = (k, lab, min, max, step = 1) => `<label class="aisl"><span>${lab} <output data-out="${k}"></output></span><input type="range" data-tf="${k}" min="${min}" max="${max}" step="${step}"></label>`;
     const col = (path, lab, v) => `<label class="aicol"><input type="color" data-c="${path}" value="${v}"><span>${lab}</span></label>`;
     return `<div class="aied"><h2>App icon</h2><p>Edit the icon people see in the browser tab, on their phone’s home screen and when they install the app. It is drawn from layers, so it stays sharp at every size and the gradient has no colour banding. Drag on the icon to move the selected layer, use the mouse wheel or pinch to resize it, and double-click a part to select it. Arrow keys nudge (hold Shift for bigger steps), + and − resize, [ and ] rotate, Ctrl+Z undoes.</p>
@@ -149,7 +160,7 @@ const AppIcon = (() => {
           <div class="ainudge" aria-label="Nudge"><button class="btn sm" data-nd="0,-1">▲</button><div><button class="btn sm" data-nd="-1,0">◀</button><button class="btn sm" data-nd="1,0">▶</button></div><button class="btn sm" data-nd="0,1">▼</button></div></fieldset>
         <fieldset><legend>Background</legend><div class="segs">${[['linear', 'Gradient'], ['radial', 'Radial'], ['solid', 'Solid'], ['image', 'Picture'], ['none', 'Transparent']].map(([k, l]) => `<button class="seg ${bg.mode === k ? 'on' : ''}" data-bgm="${k}">${l}</button>`).join('')}</div>
           <div class="aipre">${Object.entries(PRESETS).map(([k, p]) => `<button class="aiswatch" data-pre="${k}" title="${p.name}" style="background:linear-gradient(135deg,${p.stops.join(',')})"><span>${p.name}</span></button>`).join('')}</div>
-          <div class="aicols">${bg.stops.map((s, i) => col('bg.stops.' + i, ['Top-left', 'Middle', 'Lower', 'Corner'][i], s)).join('')}${col('bg.solid', 'Solid colour', bg.solid)}${col('bg.glowColor', 'Glow', bg.glowColor)}</div>
+          ${stripHTML(bg)}<div class="aicols">${col('bg.solid', 'Solid colour', bg.solid)}${col('bg.glowColor', 'Glow', bg.glowColor)}</div>
           <label class="aisl"><span>Angle <output>${bg.angle}°</output></span><input type="range" data-bg="angle" min="0" max="360" value="${bg.angle}"></label>
           <label class="aisl"><span>Glow strength <output>${bg.glow}%</output></span><input type="range" data-bg="glow" min="0" max="100" value="${bg.glow}"></label>
           <label class="fld inline">Glow position<select data-bg="glowAt">${[['br', 'Bottom right'], ['bl', 'Bottom left'], ['tr', 'Top right'], ['tl', 'Top left'], ['t', 'Top'], ['b', 'Bottom'], ['c', 'Centre'], ['off', 'Off']].map(([k, l]) => `<option value="${k}" ${bg.glowAt === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
@@ -166,6 +177,7 @@ const AppIcon = (() => {
           <div class="row-btns"><button class="btn hot" data-op="apply">Apply to the site for everyone</button><button class="btn" data-op="revert">Use the published icon</button><button class="btn" data-op="reset">Start over</button></div>
           <p class="small muted">${Config.get().appIcon ? 'A custom icon is live on the site.' : 'The site is using the published icon files.'} Installed copies of the app keep the icon they were installed with until they are reinstalled; the full icon pack has every file the app stores need.</p></fieldset></div></div></div>`; }
 
+  function liveStrip(pane) { const strip = pane.querySelector('#aistrip'); if (!strip) return; const bg = Ed.st.bg; strip.style.background = stripCSS(bg.stops); const sp = bg.stops[Ed.gsel], h = strip.querySelector(`[data-gi="${Ed.gsel}"]`); if (h && sp) { h.style.left = sp[1] + '%'; h.style.setProperty('--sc', sp[0]); } const pi = pane.querySelector('#aigp'); if (pi && document.activeElement !== pi && sp) pi.value = Math.round(sp[1]); }
   function mount(pane) { Ed.st = fix(draft() || Config.get().appIcon || DEF()); Ed.undo = []; Ed.redo = []; pane.innerHTML = html(); bind(pane); redraw(pane); }
   function readImg(file, max) { return new Promise((res, rej) => { if (!file) return rej(new Error('No file.')); if (file.size > 15e6) return rej(new Error('That picture is over 15 MB.')); const r = new FileReader(); r.onload = async () => { try { const im = await loadImg(r.result), k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/webp', .9)); } catch (e) { rej(e); } }; r.onerror = () => rej(new Error('Could not read the file.')); r.readAsDataURL(file); }); }
   function bind(pane) { const cv = pane.querySelector('.aicanv'), st = () => Ed.st, ch = () => redraw(pane), setPath = (p, v) => { const ks = p.split('.'); let o = Ed.st; while (ks.length > 1) o = o[ks.shift()]; o[ks[0]] = v; };
@@ -176,8 +188,18 @@ const AppIcon = (() => {
       else if (t.dataset.bg && t.type === 'range') { st().bg[t.dataset.bg] = +t.value; t.previousElementSibling.querySelector('output').textContent = t.value + (t.dataset.bg === 'angle' ? '°' : t.dataset.bg === 'grain' ? '' : '%'); ch(); }
       else if (t.dataset.art) { st().art[t.dataset.art] = +t.value; t.previousElementSibling.querySelector('output').textContent = t.value + '%'; ch(); }
       else if (t.dataset.top) { st()[t.dataset.top] = +t.value; t.previousElementSibling.querySelector('output').textContent = t.value + '%'; ch(); }
+      else if (t.id === 'aigc' || t.id === 'aigp') { const sp = st().bg.stops[Ed.gsel]; if (t.id === 'aigc') sp[0] = t.value; else sp[1] = Math.max(0, Math.min(100, +t.value || 0)); if (!['linear', 'radial'].includes(st().bg.mode)) st().bg.mode = 'linear'; liveStrip(pane); ch(); }
       else if (t.dataset.c) { setPath(t.dataset.c, t.value); if (t.dataset.c.startsWith('bg.stops') && !['linear', 'radial'].includes(st().bg.mode)) st().bg.mode = 'linear'; ch(); } });
     pane.addEventListener('pointerdown', e => { if (e.target.matches('input[type=range],input[type=color]')) commit(); }, true);
+    pane.addEventListener('change', e => { if (e.target.id === 'aigp' || e.target.id === 'aigc') refresh(); });
+    // The spectrum bar: drag a point to move it, click the bar to drop a new one.
+    pane.addEventListener('pointerdown', e => { const strip = e.target.closest('#aistrip'); if (!strip) return; const r = strip.getBoundingClientRect(), pos = x => Math.max(0, Math.min(100, Math.round((x - r.left) / r.width * 100))), bg = st().bg, h = e.target.closest('[data-gi]');
+      commit(); if (!['linear', 'radial'].includes(bg.mode)) bg.mode = 'linear';
+      if (!h) { const p = pos(e.clientX); bg.stops.push([colorAt(bg.stops, p), p]); Ed.gsel = bg.stops.length - 1; return refresh(); }
+      e.preventDefault(); Ed.gsel = +h.dataset.gi; strip.querySelectorAll('.gstop').forEach(x => x.classList.toggle('on', x === h)); h.setPointerCapture(e.pointerId); const sp = bg.stops[Ed.gsel]; let moved = false;
+      const ci = pane.querySelector('#aigc'), pi = pane.querySelector('#aigp'); if (ci) ci.value = sp[0]; if (pi) pi.value = Math.round(sp[1]);
+      h.onpointermove = ev => { moved = true; sp[1] = pos(ev.clientX); liveStrip(pane); ch(); };
+      h.onpointerup = () => { h.onpointermove = null; h.onpointerup = null; refresh(); }; });
     pane.addEventListener('change', async e => { const t = e.target;
       if (t.dataset.tf && t.type === 'checkbox') { commit(); tgtObj()[t.dataset.tf] = t.checked; if (Ed.tgt === 'custom' && t.checked && !st().img) toast('Add your own picture first, below.'); ch(); }
       else if (t.dataset.view) { Ed[t.dataset.view] = t.checked; overlay(pane); }
@@ -194,7 +216,15 @@ const AppIcon = (() => {
       if (b.dataset.fit) { commit(); fit(+b.dataset.fit); return ch(); }
       if (b.dataset.nd) { commit(); const [x, y] = b.dataset.nd.split(',').map(Number), step = e.shiftKey ? 20 : 4; moveBy(s, Ed.tgt, x * step, y * step, Ed.N); return ch(); }
       if (b.dataset.bgm) { commit(); s.bg.mode = b.dataset.bgm; if (b.dataset.bgm === 'image' && !s.bg.img) toast('Choose a background picture below.'); return refresh(); }
-      if (b.dataset.pre) { commit(); const p = PRESETS[b.dataset.pre]; s.bg.stops = p.stops.slice(); s.bg.glowColor = p.glow; if (!['linear', 'radial'].includes(s.bg.mode)) s.bg.mode = 'linear'; return refresh(); }
+      if (b.dataset.gi != null) { Ed.gsel = +b.dataset.gi; return refresh(); }
+      if (b.dataset.gop) { commit(); const st2 = s.bg.stops; if (!['linear', 'radial'].includes(s.bg.mode)) s.bg.mode = 'linear';
+        if (b.dataset.gop === 'del' && st2.length > 2) { st2.splice(Ed.gsel, 1); Ed.gsel = Math.max(0, Ed.gsel - 1); }
+        if (b.dataset.gop === 'add') { const a = sorted(st2); let gap = -1, at2 = 50; for (let i = 0; i < a.length - 1; i++) if (a[i + 1][1] - a[i][1] > gap) { gap = a[i + 1][1] - a[i][1]; at2 = (a[i][1] + a[i + 1][1]) / 2; } st2.push([colorAt(st2, at2), Math.round(at2)]); Ed.gsel = st2.length - 1; }
+        if (b.dataset.gop === 'even') { st2.sort((x, y) => x[1] - y[1]); st2.forEach((x, i) => x[1] = Math.round(i / (st2.length - 1) * 100)); }
+        if (b.dataset.gop === 'rev') st2.forEach(x => x[1] = 100 - x[1]);
+        if (b.dataset.gop === 'site') { try { const g = GradEd.current(GradEd.skin(), 'grad'); if (g) { s.bg.stops = g.stops.map(([c, p]) => [c, p]); s.bg.angle = g.angle; Ed.gsel = 0; } } catch (er) {} }
+        return refresh(); }
+      if (b.dataset.pre) { commit(); const p = PRESETS[b.dataset.pre]; s.bg.stops = preStops(b.dataset.pre); Ed.gsel = 0; s.bg.glowColor = p.glow; if (!['linear', 'radial'].includes(s.bg.mode)) s.bg.mode = 'linear'; return refresh(); }
       if (b.dataset.dl) { b.disabled = true; try { const n = +LS.get('iconSz', 1024), nm = 'davids-game-world-icon';
           if (b.dataset.dl === 'png') saveBlob(`${nm}-${n}.png`, await png(s, n));
           if (b.dataset.dl === 'tpng') saveBlob(`${nm}-${n}-transparent.png`, await png(s, n, { transparent: true }));
@@ -233,3 +263,8 @@ const AppIcon = (() => {
 DEV_TABS.push(['appicon', 'App icon']);
 { const d0 = VIEWS.developer.render; VIEWS.developer.render = function (el, tab) { d0.call(this, el, tab); if (tab !== 'appicon' || !Dev.allowed()) return; const pane = el.querySelector('.apane'); if (!pane || pane.querySelector('.aied')) return; AppIcon.mount(pane); }; }
 { const dv = VIEWS.developer; const up = dv.update; dv.update = function (el, tab) { if (tab === 'appicon' && document.querySelector('.aied')) return; return up ? up.call(this, el, tab) : this.render(el, tab); }; }
+// The design every visitor starts with (they can still pick their own in Settings). Saved site-wide.
+setInterval(() => { try { if (!LS.get('skin', '') && document.documentElement.dataset.skin !== Skin.cur()) { Skin.apply(); try { render(true); } catch (e) {} } } catch (e) {} }, 1500);
+{ const d0 = VIEWS.developer.render; VIEWS.developer.render = function (el, tab) { d0.call(this, el, tab); if (tab !== 'site' || !Dev.allowed()) return; const pane = el.querySelector('.apane'), lp = pane && pane.querySelector('.lookpane'); if (!lp || lp.querySelector('#defskin')) return; const cur = String((Config.get().look || {}).skin || '5');
+    lp.querySelector('h2').insertAdjacentHTML('afterend', `<label class="fld inline">Design everyone starts with <select id="defskin">${SKINS.map(([v, n]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>Option ${v} · ${esc(n)}</option>`).join('')}</select></label><p class="small muted">Visitors see this design unless they choose another one in Settings.</p>`);
+    lp.querySelector('#defskin').onchange = async e => { await Config.save({ look: { skin: e.target.value } }); LS.set('skin', ''); Skin.apply(e.target.value); toast('Saved. Everyone now starts with option ' + e.target.value + '.'); try { render(true); } catch (er) {} }; }; }
