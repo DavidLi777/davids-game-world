@@ -1,0 +1,37 @@
+.aied h2{margin-top:0}
+.aiwrap{display:grid;grid-template-columns:minmax(280px,520px) 1fr;gap:22px;align-items:start}
+@media (max-width:980px){.aiwrap{grid-template-columns:1fr}}
+.aistage{position:sticky;top:76px}
+.aicanv{position:relative;width:100%;aspect-ratio:1;border-radius:4px;overflow:hidden;background:repeating-conic-gradient(#d9d9e3 0 25%,#f4f4f8 0 50%) 0 0/24px 24px;box-shadow:0 10px 30px rgba(30,10,60,.25);touch-action:none;cursor:grab;outline:none}
+.aicanv:focus-visible{box-shadow:0 0 0 3px #22d3ee,0 10px 30px rgba(30,10,60,.25)}
+.aicanv:active{cursor:grabbing}
+.aicanv canvas{position:absolute;inset:0;width:100%;height:100%}
+.aistage .row-btns{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.aipv{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.aipv figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.aipv figcaption{font-size:11px;opacity:.7;text-align:center;max-width:120px}
+.aipv .pv-ios canvas{border-radius:22.5%}
+.aipv .pv-and canvas{border-radius:50%}
+.aipv .pv-sqc canvas{border-radius:14%}
+.aiphone{display:grid;grid-template-columns:repeat(4,64px);gap:14px 10px;padding:18px 14px;border-radius:26px;background:linear-gradient(160deg,#1f1147,#4c1d95 60%,#be185d);width:max-content}
+.aiph-app{display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff}
+.aiph-app canvas,.aiph-app i{width:58px;height:58px;border-radius:22.5%;display:block}
+.aiph-app small{font-size:10px;opacity:.9}
+.aictl fieldset{border:1px solid var(--line,#dde);border-radius:14px;padding:12px 14px 14px;margin:0 0 14px}
+.aictl legend{font-weight:700;padding:0 6px}
+.aied .segs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.aied .seg{border:1px solid var(--line,#ccd);background:transparent;color:inherit;border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}
+.aied .seg.on{background:var(--p1,#7c3aed);border-color:var(--p1,#7c3aed);color:#fff}
+.aisl{display:block;margin:8px 0}
+.aisl span{display:flex;justify-content:space-between;font-size:13px}
+.aisl input{width:100%}
+.aigrid{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.ainudge{display:inline-flex;flex-direction:column;align-items:center;gap:4px}
+.ainudge div{display:flex;gap:34px}
+.aipre{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;margin:6px 0 10px}
+.aiswatch{height:52px;border:0;border-radius:10px;cursor:pointer;position:relative;color:#fff;font:inherit;font-size:11px;text-shadow:0 1px 2px rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px}
+.aicols{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0}
+.aicol{display:flex;flex-direction:column;align-items:center;font-size:11px;gap:3px}
+.aicol input{width:44px;height:34px;border:0;padding:0;background:none;cursor:pointer}
+.aied .chk{display:inline-flex;gap:6px;align-items:center;margin-right:12px;font-size:14px}
+.top .brand img.appmark{width:34px;height:34px;border-radius:9px;vertical-align:middle;margin-right:6px}
