@@ -1,0 +1,19 @@
+// Design options: 1 Classic Felt (original), 2 Neon Pop, 3 Sunset Party, 4 Disco. The look is stored on this device.
+const SKINS = [['1', 'Classic Felt', 'The original green card table', 'linear-gradient(120deg,#0f5a43,#16805e)'], ['2', 'Neon Pop', 'Purple and pink on white', 'linear-gradient(120deg,#7c3aed,#a855f7,#ec4899)'], ['3', 'Sunset Party', 'Purple, pink and orange on white', 'linear-gradient(120deg,#7c3aed,#ec4899,#f97316)'], ['4', 'Disco', 'Violet, magenta, cyan and gold on white', 'linear-gradient(120deg,#06b6d4,#8b5cf6,#d946ef,#fb7185)'], ['5', 'Glow', 'Instagram-style purple, pink and orange, on a purple-pink background', 'linear-gradient(45deg,#fcaf45,#f77737,#e1306c,#c13584,#833ab4)']];
+// Category colours for the game artwork in each option
+const SKIN_CATS = {
+  2: { Board: '#7c3aed', Card: '#db2777', Dice: '#9333ea', Puzzle: '#6366f1', Word: '#c026d3', Arcade: '#e11d48', Party: '#a855f7' },
+  3: { Board: '#7c3aed', Card: '#ec4899', Dice: '#f97316', Puzzle: '#8b5cf6', Word: '#ea580c', Arcade: '#e11d48', Party: '#d946ef' },
+  5: { Board: '#833ab4', Card: '#e1306c', Dice: '#f77737', Puzzle: '#5851db', Word: '#fcaf45', Arcade: '#fd1d1d', Party: '#c13584' },
+  4: { Board: '#8b5cf6', Card: '#ec4899', Dice: '#f59e0b', Puzzle: '#06b6d4', Word: '#10b981', Arcade: '#f43f5e', Party: '#d946ef' } };
+const Skin = {
+  cur() { const v = String(LS.get('skin', '') || '2'); return SKINS.some(s => s[0] === v) ? v : '2'; },
+  apply(v = this.cur()) { document.documentElement.dataset.skin = v; if (!this.base) this.base = { ...CAT_COLOR }; Object.assign(CAT_COLOR, SKIN_CATS[v] || this.base); const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = v === '1' ? '#0f5a43' : v === '5' ? '#833ab4' : '#7c3aed'; },
+  set(v) { LS.set('skin', v); this.apply(v); try { render(true); } catch (e) {} toast('Look changed to ' + SKINS.find(s => s[0] === v)[1] + '.'); },
+  pickerHTML() { const c = this.cur(); return `<div class="skinpick" role="radiogroup" aria-label="Site look">${SKINS.map(([v, n, d, g]) => `<button type="button" role="radio" aria-checked="${v === c}" class="${v === c ? 'on' : ''}" data-skin="${v}"><div class="skw" style="background:${g}"><i></i></div><b>Option ${v} · ${n}</b><small>${d}</small></button>`).join('')}</div>`; },
+  open() { modal(`<h2>Choose a look</h2><p class="muted">Pick the style you like best. It's saved on this device.</p>${this.pickerHTML()}`); } };
+Skin.apply();
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#modal [data-skin]'); if (b) { Skin.set(b.dataset.skin); document.querySelectorAll('#modal [data-skin]').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); }); } });
+// A palette button in the top bar, and the picker in Settings
+new MutationObserver(() => { const top = document.querySelector('.top'); if (top && !top.querySelector('#skinbtn')) { const ref = top.querySelector('#setbtn') || top.querySelector('.tbtn:last-of-type'); const b = document.createElement('button'); b.id = 'skinbtn'; b.className = 'tbtn'; b.title = 'Change the look'; b.setAttribute('aria-label', 'Change the look'); b.innerHTML = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18c1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.4-1.1-.3-.3-.4-.6-.4-1.1 0-.9.7-1.6 1.6-1.6H16a5 5 0 005-5c0-4-4-7.6-9-7.6z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.5" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg>'; b.onclick = () => Skin.open(); ref ? ref.before(b) : top.appendChild(b); }
+  const m = document.querySelector('#modal.open'); if (m && m.querySelector('.langsel') && !m.querySelector('.skinpick')) { const sec = m.querySelector('section'); if (sec) sec.insertAdjacentHTML('beforebegin', `<section><h3>Look</h3>${Skin.pickerHTML()}</section>`); } }).observe(document.documentElement, { childList: true, subtree: true });
